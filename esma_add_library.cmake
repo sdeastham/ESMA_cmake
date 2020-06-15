@@ -13,7 +13,10 @@ macro (esma_add_library this)
     message (STATUS "Generating build instructions for component: ${this}")
   endif ()
 
-  set (options EXCLUDE_FROM_ALL)
+  set (options EXCLUDE_FROM_ALL NOINSTALL)
+  set (oneValueArgs
+    # shared with ecbuild
+    TYPE)	
   set (multiValueArgs
     # esma unique
     SUBCOMPONENTS SUBDIRS NEVER_STUB PRIVATE_DEFINITIONS PUBLIC_DEFINITIONS
@@ -44,7 +47,7 @@ macro (esma_add_library this)
   endif ()
   if (ARGS_INCLUDES)
     if (NOT ESMA_ALLOW_DEPRECATED)
-      ecbuild_warn("SRCS is a deprecated option for esma_add_library(); use target_include_directories instead")
+      ecbuild_warn("INCLUDES is a deprecated option for esma_add_library(); use target_include_directories instead")
     endif ()
     set (ARGS_PUBLIC_INCLUDES ${ARGS_INCLUDES})
   endif ()
@@ -61,12 +64,7 @@ macro (esma_add_library this)
   set (non_stubbed)
   foreach (subdir ${ARGS_SUBCOMPONENTS})
 
-    string (SUBSTRING ${subdir} 0 1 leading_character)
-    if (leading_character STREQUAL "@")
-      string (SUBSTRING ${subdir} 1 -1 mod_name) # strip leading "@"
-    else ()
-      set (mod_name ${subdir})
-    endif()
+    string(REPLACE "@" "" mod_name ${subdir})
 
     if (NOT rename_${subdir}) # usual case
       set (module_name ${mod_name})
@@ -74,13 +72,11 @@ macro (esma_add_library this)
       set(module_name ${rename_${mod_name}})
     endif ()
 
-    if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
-      add_subdirectory (${subdir})
+    esma_add_subdirectory(${mod_name} FOUND found)
+    if (found)
       list (APPEND non_stubbed ${mod_name})
-    else () # make stub and append to sources (in ARGS_SOURCES)
-      if (CMAKE_DEBUG)
-	message (STATUS  "  ... Creating stub component ${module_name}")
-      endif()
+    else ()
+      ecbuild_debug("  ... Creating stub component ${module_name}")
       esma_create_stub_component (ARGS_SOURCES ${module_name})
     endif ()
 
@@ -88,10 +84,18 @@ macro (esma_add_library this)
 
   # This library depends on all DEPENDENCIES and _non-stubbed_ subcomponents.
   set (all_dependencies ${ARGS_PUBLIC_LIBS} ${non_stubbed})
+  if (ARGS_TYPE)
+    set(ARGS_TYPE TYPE ${ARGS_TYPE})
+  endif()
+  if (ARGS_NOINSTALL)
+    set(NOINSTALL_ "NOINSTALL")
+  endif()
   ecbuild_add_library (TARGET ${this}
     SOURCES ${ARGS_SOURCES}
     PUBLIC_LIBS ${all_dependencies}
     PUBLIC_INCLUDES ${ARGS_PUBLIC_INCLUDES}
+    ${ARGS_TYPE}
+    ${NOINSTALL_}
     )
 
   set_target_properties(${this} PROPERTIES EXCLUDE_FROM_ALL ${ARGS_EXCLUDE_FROM_ALL})

@@ -9,7 +9,16 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 # Bring in ecbuild
-list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/@ecbuild/cmake")
+if (IS_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/ecbuild")
+  list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/ecbuild/cmake")
+elseif (IS_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/@ecbuild")
+  list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/@ecbuild/cmake")
+elseif (IS_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/ecbuild@")
+  list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/ecbuild@/cmake")
+else ()
+  message (FATAL_ERROR "ecbuild subdir not found")
+endif()
+  
 #set (BUILD_SHARED_LIBS OFF)
 option(BUILD_SHARED_LIBS "Build the shared library" OFF)
 set (ECBUILD_2_COMPAT_VALUE OFF)
@@ -26,11 +35,24 @@ include (esma_add_library)
 include (esma_generate_automatic_code)
 include (esma_create_stub_component)
 include (esma_fortran_generator_list)
+include (esma_find_python_module)
+include (esma_check_python_module)
+include (esma_add_f2py_module)
+
+find_package(ImageMagick)
+if (NOT ImageMagick_FOUND)
+   message(STATUS "NOTE: ImageMagick was not found. This will prevent using LaTeX and some postprocessing utilities from running, but does not affect the build")
+endif ()
 
 find_package(LATEX)
-# These are all the bits of LaTeX that UseLatex needs. As it's confusing how LATEX_FOUND from
-# find_package(LATEX) is set, we test all the bits that UseLatex requires
-if (LATEX_FOUND AND LATEX_PDFLATEX_FOUND AND LATEX_BIBTEX_FOUND AND LATEX_MAKEINDEX_FOUND)
+# These are all the bits of LaTeX that UseLatex needs. As it's confusing
+# how LATEX_FOUND from find_package(LATEX) is set, we test all the bits
+# that UseLatex requires
+#
+# Also, UseLatex assumes ImageMagick is installed. While this is always
+# nice (and technically required to generate plots with GEOS plotting 
+# utilities, it's not necessary to *build*
+if (LATEX_FOUND AND LATEX_PDFLATEX_FOUND AND LATEX_BIBTEX_FOUND AND LATEX_MAKEINDEX_FOUND AND ImageMagick_FOUND)
    # If they are all found, set LATEX_FOUND to TRUE...
    set (LATEX_FOUND TRUE)
 
@@ -87,7 +109,9 @@ option (ESMA_ALLOW_DEPRECATED "suppress warnings about deprecated features" ON)
 # Baselibs ...
 include (FindBaselibs)
 
-enable_testing()
+# Testing
+include (esma_enable_tests)
+
 set (CMAKE_INSTALL_MESSAGE LAZY)
 
 # This is a "stub" macro to detect building within an ESMA project (for MAPL standalone)
@@ -96,3 +120,5 @@ macro (esma)
 endmacro ()
 
 find_package(GitInfo)
+
+find_package(F2PY)
