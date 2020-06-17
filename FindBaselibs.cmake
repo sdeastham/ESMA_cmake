@@ -86,7 +86,7 @@ mark_as_advanced(GFTL_IS_REQUIRED_ARG)
 find_package(GFTL ${GFTL_IS_REQUIRED_ARG} CONFIG)
 
 # Find GFTL_SHARED
-set(GFTL_SHARED_IS_REQUIRED_ARG "" CACHE STRING "Argument in GFTL_SHARED's find_package call")
+set(GFTL_SHARED_IS_REQUIRED_ARG "REQUIRED" CACHE STRING "Argument in GFTL_SHARED's find_package call")
 mark_as_advanced(GFTL_SHARED_IS_REQUIRED_ARG)
 find_package(GFTL_SHARED ${GFTL_SHARED_IS_REQUIRED_ARG} CONFIG)
 
