@@ -186,7 +186,7 @@ target_link_libraries(Baselibs INTERFACE
     $<$<TARGET_EXISTS:pfunit>:pfunit>
     gftl ESMF
     MPI::MPI_C MPI::MPI_CXX MPI::MPI_Fortran
-    OpenMP::OpenMP_Fortran
+    $<$<BOOL:${OMP}>:OpenMP::OpenMP_Fortran>
   )
 target_compile_options(Baselibs INTERFACE
 	$<$<COMPILE_LANGUAGE:Fortran>:

@@ -71,7 +71,9 @@ if (APPLE)
 endif ()
 
 # OpenMP support
-find_package (OpenMP REQUIRED COMPONENTS Fortran)
+if(OMP)
+    find_package (OpenMP REQUIRED COMPONENTS Fortran)
+endif()
 
 # Threading support
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
