@@ -70,10 +70,7 @@ if (APPLE)
   include(osx_extras)
 endif ()
 
-# OpenMP support
-if(OMP)
-    find_package (OpenMP REQUIRED COMPONENTS Fortran)
-endif()
+find_package (OpenMP REQUIRED COMPONENTS Fortran)
 
 # Threading support
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)

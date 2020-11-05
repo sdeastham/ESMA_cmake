@@ -54,6 +54,12 @@ find_library(ESMF_LIBRARY
 	PATH_SUFFIXES "lib"
 )
 
+find_file(ESMF_MK_FILEPATH
+	esmf.mk
+	DOC "The path to \"esmf.mk\" in your ESMF installation."
+	PATH_SUFFIXES "lib"
+)
+
 # Get ESMF's versions number
 if(EXISTS ${ESMF_HEADERS_DIR}/ESMC_Macros.h)
 	file(READ ${ESMF_HEADERS_DIR}/ESMC_Macros.h ESMC_MACROS)
@@ -88,6 +94,15 @@ execute_process (COMMAND ${CMAKE_CXX_COMPILER} --print-file-name=libstdc++.so OU
 execute_process (COMMAND ${CMAKE_CXX_COMPILER} --print-file-name=libgcc.a OUTPUT_VARIABLE libgcc OUTPUT_STRIP_TRAILING_WHITESPACE)
 set(ESMF_LIBRARIES ${ESMF_LIBRARY} ${NETCDF_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${MPI_CXX_LIBRARIES} rt ${stdcxx} ${libgcc})
 set(ESMF_INCLUDE_DIRS ${ESMF_HEADERS_DIR} ${ESMF_MOD_DIR})
+
+# Check if ESMF is built with OpenMP. If so, link OpenMP
+if(EXISTS ${ESMF_MK_FILEPATH})
+    file(READ ${ESMF_MK_FILEPATH} ESMF_MK)
+    string(REPLACE ";" "|" OpenMP_LIBNAME_PATTERNS "${OpenMP_CXX_FLAGS};${OpenMP_Fortran_FLAGS}")
+    if(ESMF_MK MATCHES "ESMF_(F90|CXX)LINKOPTS *= *[^\n]*(${OpenMP_LIBNAME_PATTERNS})[^\n]*\n")
+        list(APPEND ESMF_LIBRARIES ${OpenMP_CXX_FLAGS} ${OpenMP_Fortran_FLAGS})
+    endif()
+endif()
 
 # Make an imported target for ESMF
 if(NOT TARGET ESMF)
