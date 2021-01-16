@@ -49,8 +49,8 @@ find_path(ESMF_MOD_DIR
 )
 
 find_library(ESMF_LIBRARY
-	libesmf.a
-	DOC "The path to the directory containing \"libesmf.a\"."
+	libesmf_fullylinked.so
+	DOC "The path to the directory containing \"libesmf_fullylinked.so\"."
 	PATH_SUFFIXES "lib"
 )
 
